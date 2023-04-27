@@ -1,6 +1,7 @@
 import cv2
 import pyrealsense2.pyrealsense2 as rs
 import numpy as np
+#import fg_camera_sim
 
 # visdrone stuff
 output_layers = None
@@ -55,9 +56,9 @@ def create_tracker(tracker_type='CSRT'):
 def load_visdrone_network():
 
     global visdrone_net, output_layers, visdrone_classes
-    in_weights = '/Users/zacharybenson/Documents/github/autonomous-first-aid-kit-delivey/yolo_visdrone/yolov4-tiny-custom_last.weights'
-    in_config = '/Users/zacharybenson/Documents/github/autonomous-first-aid-kit-delivey/yolo_visdrone/yolov4-tiny-custom.cfg'
-    name_file = '/Users/zacharybenson/Documents/github/autonomous-first-aid-kit-delivey/yolo_visdrone/custom.names'
+    in_weights = '/home/usafa/PycharmProjects/USAFA/autonomous-first-aid-kit-delivery/yolo_visdrone/yolov4-tiny-custom_last.weights'
+    in_config = '/home/usafa/PycharmProjects/USAFA/autonomous-first-aid-kit-delivery/yolo_visdrone/yolov4-tiny-custom.cfg'
+    name_file = '/home/usafa/PycharmProjects/USAFA/autonomous-first-aid-kit-delivery/yolo_visdrone/custom.names'
 
     """
     load names
@@ -324,8 +325,8 @@ def get_cur_frame(attempts=5, flip_v=False):
     # If using an actual camera, comment out the two lines of
     # code below and replace with code that returns a single frame
     # from your camera.
-    # image = fg_camera_sim.get_cur_frame()
-    # return cv2.resize(image, (int(FRAME_HORIZONTAL_CENTER * 2), int(FRAME_VERTICAL_CENTER * 2)))
+    #image = fg_camera_sim.get_cur_frame()
+    #return cv2.resize(image, (int(FRAME_HORIZONTAL_CENTER * 2), int(FRAME_VERTICAL_CENTER * 2)))
 
     # Code below can be used with the realsense camera...
     while tries <= attempts:
