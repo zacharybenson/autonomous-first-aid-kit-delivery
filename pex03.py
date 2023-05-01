@@ -62,6 +62,7 @@ class DroneMission:
         self.target_locate_attempts = 0
         self.refresh_counter = 0
         self.confirm_attempts = 0
+        self.target_attempts = 0
         self.direction_x = "unknown"
         self.direction_y = "unknown"
         self.inside_circle = False
@@ -147,13 +148,13 @@ class DroneMission:
         # increase altitude by 5 meters to better fit the
         # target in the incoming images.
         self.log_info(f"Positioning towards potential target...")
-        '''drone_lib.goto_point(self.drone,
+        drone_lib.goto_point(self.drone,
                              self.init_obj_lat,
                              self.init_obj_lon,
                              2.5,
                              self.init_obj_alt)
-        '''
-        # drone_lib.condition_yaw(self.drone, self.last_heading_pos)
+        time.sleep(6)
+        drone_lib.condition_yaw(self.drone, self.last_heading_pos)
         time.sleep(4)
 
     def confirm_objective(self, frame_write=None):
@@ -176,7 +177,7 @@ class DroneMission:
 
                 if self.confirm_attempts \
                         >= self.max_confirm_attempts:
-
+                    self.confirm_attempts = 0
                     # We lost our objective... switch back to seek mode to
                     # continue looking for it.
                     self.mission_mode = MISSION_MODE_SEEK
@@ -190,23 +191,24 @@ class DroneMission:
                     self.log_info("Re-acquiring target...")
 
                     if frame_write is not None:
+
                         cv2.putText(frame_write, "Re-acquiring target...",
                                     (10, 250), IMG_FONT, 1,
                                     (255, 0, 0), 2, cv2.LINE_AA)
 
                     # Move to point of original sighting.
-                    drone_lib.goto_point(self.drone,
+                    '''drone_lib.goto_point(self.drone,
                                          self.init_obj_lat,
                                          self.init_obj_lon,
                                          1,
                                          self.init_obj_alt)
-
+                    '''
                     # Now, perform a random yaw for a
                     # different vantage point than before.
-                    rand_number = random.random()
-                    degrees = rand_number * 180
-                    drone_lib.condition_yaw(self.drone, 30, relative=True)
-                    time.sleep(4)
+                    rand_number = random.randint(1, 10)
+                    degrees = rand_number * 36
+                    drone_lib.condition_yaw(self.drone, degrees)
+                    time.sleep(3)
                     self.confirm_attempts += 1
         else:
             # NOTE: We might want to throw exception here,
@@ -228,7 +230,7 @@ class DroneMission:
                     and self.object_identified:
 
                 self.log_info("Targeting object...")
-
+                self.target_attempts = 0
                 if dx < 0:
                     self.direction_x = "L"
                 if dx > 0:
@@ -320,9 +322,14 @@ class DroneMission:
                 if frame_write is not None:
                     cv2.putText(frame_write, "LOST TARGET!", (10, 400), IMG_FONT, 1,
                                 (0, 255, 255), 2, cv2.LINE_AA)
-
-                self.log_info("Cannot target object; switching back to confirm mode...")
-                self.mission_mode = MISSION_MODE_CONFIRM
+                self.target_attempts += 1
+                if self.target_attempts >= DEFAULT_MAX_CONFIRM_ATTEMPTS:
+                    self.log_info("Cannot target object; switching back to confirm mode...")
+                    self.mission_mode = MISSION_MODE_CONFIRM
+                    self.confirm_attempts = 0
+                    self.target_attempts = 0
+                else:
+                    time.sleep(.5)
 
     def deliver_package(self, frame_write=None):
         self.log_info("Delivering package...")
