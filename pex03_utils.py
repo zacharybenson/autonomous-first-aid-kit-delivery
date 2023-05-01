@@ -52,7 +52,7 @@ def calc_new_location(cur_lat, cur_lon, heading, meters):
 
 def get_avg_distance_to_obj(seconds, device, virtual_mode=False):
     if virtual_mode:
-        return 35.0
+        return 55.0
 
     distance = device.rangefinder.distance
     i = 1

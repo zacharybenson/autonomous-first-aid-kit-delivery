@@ -263,7 +263,7 @@ def send_body_frame_velocities(device, forward, right, velocity_z, duration=2):
     # send command to vehicle on 1 Hz cycle
     for x in range(0, duration):
         device.send_mavlink(msg)
-        time.sleep(1)
+        time.sleep(3)
 
 
 def connect_device(s_connection, baud=115200, log=None):

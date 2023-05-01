@@ -147,13 +147,13 @@ class DroneMission:
         # increase altitude by 5 meters to better fit the
         # target in the incoming images.
         self.log_info(f"Positioning towards potential target...")
-        drone_lib.goto_point(self.drone,
+        '''drone_lib.goto_point(self.drone,
                              self.init_obj_lat,
                              self.init_obj_lon,
                              2.5,
                              self.init_obj_alt)
-
-        drone_lib.condition_yaw(self.drone, self.last_heading_pos)
+        '''
+        # drone_lib.condition_yaw(self.drone, self.last_heading_pos)
         time.sleep(4)
 
     def confirm_objective(self, frame_write=None):
@@ -198,15 +198,15 @@ class DroneMission:
                     drone_lib.goto_point(self.drone,
                                          self.init_obj_lat,
                                          self.init_obj_lon,
-                                         2.5,
+                                         1,
                                          self.init_obj_alt)
 
                     # Now, perform a random yaw for a
                     # different vantage point than before.
                     rand_number = random.random()
                     degrees = rand_number * 180
-                    drone_lib.condition_yaw(self.drone, degrees)
-                    time.sleep(2)
+                    drone_lib.condition_yaw(self.drone, 30, relative=True)
+                    time.sleep(4)
                     self.confirm_attempts += 1
         else:
             # NOTE: We might want to throw exception here,
@@ -219,7 +219,7 @@ class DroneMission:
         dx = float(target_point[0]) - obj_track.FRAME_HORIZONTAL_CENTER
         dy = obj_track.FRAME_VERTICAL_CENTER - float(target_point[1])
 
-        pixel_forgiveness = 15  # TODO: you decide what "good enough" is to consider centered on x or y axis...
+        pixel_forgiveness = 30  # TODO: you decide what "good enough" is to consider centered on x or y axis...
 
         if self.mission_mode == MISSION_MODE_TARGET:
 
@@ -259,7 +259,7 @@ class DroneMission:
                                     (0, 0, 255), 2, cv2.LINE_AA)
                 else:
                     # TODO: see below for setting your threshold... you decide what it should be
-                    pixel_distance_threshold = 15
+                    pixel_distance_threshold = 30
 
                     # log movements...
                     logging.info("Targeting... determined changes in velocities: X: "
@@ -272,11 +272,11 @@ class DroneMission:
 
                     if abs(dx) > pixel_distance_threshold:
                         # TODO: calculate a velocity for x-axis adjustment
-                        xv = abs(dx) / 10
+                        xv = abs(dx) / 100
                     else:
                         xv = 0
                     if abs(dy) > pixel_distance_threshold:
-                        yv = abs(dy) / 10
+                        yv = abs(dy) / 100
                     else:
                         yv = 0
 
@@ -287,14 +287,14 @@ class DroneMission:
                             if frame_write is not None:
                                 cv2.putText(frame_write, "Move forward....", (10, 200), IMG_FONT, 1,
                                             (0, 255, 0), 2, cv2.LINE_AA)
-                                drone_lib.small_move_forward(self.drone, velocity=yv)
+                                drone_lib.small_move_forward(self.drone)
                                 # TODO: you can perform "drone_lib.small_move_forward here,
                                 #       or you can do a drone_lib.move_local as well.
                         else:
                             if frame_write is not None:
                                 cv2.putText(frame_write, "Move back....", (10, 200), IMG_FONT, 1,
                                             (0, 255, 0), 2, cv2.LINE_AA)
-                                drone_lib.small_move_back(self.drone, velocity=yv)
+                                drone_lib.small_move_back(self.drone)
                             # TODO: you can perform "drone_lib.small_move_back here,
                             #       or you can do a drone_lib.move_local as well.
 
@@ -305,14 +305,14 @@ class DroneMission:
                             if frame_write is not None:
                                 cv2.putText(frame_write, "Move right....", (10, 300), IMG_FONT, 1,
                                             (0, 255, 0), 2, cv2.LINE_AA)
-                                drone_lib.small_move_right(self.drone, velocity=xv)
+                                drone_lib.small_move_right(self.drone)
                             # TODO: you can perform "drone_lib.small_move_right here,
                             #       or you can do a drone_lib.move_local as well.
                         else:
                             if frame_write is not None:
                                 cv2.putText(frame_write, "Move left....", (10, 300), IMG_FONT, 1,
                                             (0, 255, 0), 2, cv2.LINE_AA)
-                                drone_lib.small_move_left(self.drone, velocity=xv)
+                                drone_lib.small_move_left(self.drone)
                             # TODO: you can perform "drone_lib.small_move_left here,
                             #       or you can do a drone_lib.move_local as well.
 
@@ -321,8 +321,8 @@ class DroneMission:
                     cv2.putText(frame_write, "LOST TARGET!", (10, 400), IMG_FONT, 1,
                                 (0, 255, 255), 2, cv2.LINE_AA)
 
-                self.log_info("Cannot target object; switching back to seek mode...")
-                self.mission_mode = MISSION_MODE_SEEK
+                self.log_info("Cannot target object; switching back to confirm mode...")
+                self.mission_mode = MISSION_MODE_CONFIRM
 
     def deliver_package(self, frame_write=None):
         self.log_info("Delivering package...")
@@ -345,12 +345,12 @@ class DroneMission:
                           f"using alt {alt} and distance from air {dist_to_object}...")
 
             # now get ground distance to object...
-            ground_dist = 0
+            ground_dist = pex03_utils.get_ground_distance(alt, dist_to_object)
             # TODO: use pex03_utils.get_ground_distance to get ground distance
             self.log_info(f"Ground distance: {ground_dist}.")
 
+            new_lat, new_lon = pex03_utils.calc_new_location(lat, lon, heading, ground_dist-5)
             # TODO: now, calculate new lat/long within 10 feet of objective
-            new_lat = new_lon = 0.0
             # Hint: use new_lat, new_lon = pex03_utils.calc_new_location function to get it...
             #       Don't forget that you want to deliver within ten fee of the person (not much closer),
             #       and you don't want to deliver too far away from that distance...
@@ -358,13 +358,13 @@ class DroneMission:
             self.log_info(f"New location: {new_lat,}, {new_lon}.")
 
             # TODO: Now, goto new location...
-            # HINT: drone_lib.goto_point(self.drone,.....)
-
+            drone_lib.goto_point(self.drone, new_lat, new_lon, 1, alt)
+            time.sleep(10)
             if frame_write is not None:
                 cv2.putText(frame_write, "Delivering...", (10, 400), IMG_FONT, 1, (255, 0, 0), 2, cv2.LINE_AA)
                 pex03_utils.write_frame(self.refresh_counter, frame_write, self.log_path)
 
-            if self.virtual_mode:
+            if not self.virtual_mode:
                 # if just testing in sim, just land.
                 self.log_info("Time to land...")
                 self.mission_mode = MISSION_MODE_RTL
@@ -374,7 +374,7 @@ class DroneMission:
             else:
                 # TODO: ***** Finally, lower the package to the ground *****
 
-                alt_thresh = -1  # TODO: YOU set here... when above a certain alt, what rate do you want to descend?
+                alt_thresh = 10  # TODO: YOU set here... when above a certain alt, what rate do you want to descend?
                 # TODO: figure out your speeds here
                 self.log_info("Lowering package....")
                 while self.drone.location.global_relative_frame.alt > alt_thresh:
@@ -386,10 +386,11 @@ class DroneMission:
 
                     # TODO: you can perform "drone_lib.small_move_down here,
                     #       or you can do a drone_lib.move_local as well.
-                    pass  # TODO: remove "pass" when you've completed this condition.
+                    drone_lib.small_move_down(self.drone, velocity=1)
+                    # TODO: remove "pass" when you've completed this condition.
 
                 # TODO: after reach an alt below your threshold, how quickly should you continue to lower the package?
-                while self.drone.location.global_relative_frame.alt > 3.20:
+                while self.drone.location.global_relative_frame.alt > 4:
                     if self.drone.mode == "RTL" \
                             or self.drone.mode == "LAND" \
                             or self.mission_mode == MISSION_MODE_RTL:
@@ -398,11 +399,13 @@ class DroneMission:
 
                     # TODO: you can perform "drone_lib.small_move_down here,
                     #       or you can do a drone_lib.move_local as well.
-                    pass  # TODO: remove "pass" when you've completed this condition.
+                    drone_lib.small_move_down(self.drone, velocity=.5)
+                    # TODO: remove "pass" when you've completed this condition.
 
             # TODO: Now, release the package.
             # TODO: see pex03_utils.release_grip function to
             #  figure out how to open the latch to release the package
+            pex03_utils.release_grip(self.drone)
             self.log_info("Releasing package now....")
             time.sleep(2)
         else:
@@ -512,7 +515,7 @@ class DroneMission:
             self.last_lat_pos = location.lat
             self.last_lon_pos = location.lon
             # Prep information frame (the frame we will draw on)
-            # for logging/gging purposes
+            # for logging/debugging purposes
             frm_display = frame.copy()
 
             if not self.object_identified:
