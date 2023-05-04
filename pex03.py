@@ -557,7 +557,7 @@ class DroneMission:
             else:
 
                 # TODO: Continue to track our objective.
-                center, confidence, corner, radius, frm_display, bbox = obj_track.track_with_confirm(frame, frm_display, show_img=True)
+                center, confidence, corner, radius, frm_display, bbox = obj_track.track_with_confirm(frame, frm_display, show_img=self.virtual_mode)
 
                 if not confidence:
                     cv2.putText(frm_display,
