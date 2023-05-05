@@ -95,9 +95,9 @@ class DroneMission:
         # Determine how far off center from target we are...
         dx = float(target_point[0]) - obj_track.FRAME_HORIZONTAL_CENTER
         dy = obj_track.FRAME_VERTICAL_CENTER - float(target_point[1])
-
+        
         self.log_info(f"Current alignment with target center: dx={dx}, dy={dy}")
-
+        
         x, y = target_point
 
         # Draw a line between most-recent center point of target and
