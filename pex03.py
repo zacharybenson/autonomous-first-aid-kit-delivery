@@ -534,7 +534,7 @@ class DroneMission:
 
                 # TODO: set your confidence level here...
                 # HINT: needs to be smaller than 99%!
-                conf_level = .3
+                conf_level = .23
                 if confidence is not None \
                         and confidence > conf_level:
                     # We found something.  Now, send to tracker.
