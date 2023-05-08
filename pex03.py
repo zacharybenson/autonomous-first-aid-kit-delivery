@@ -356,7 +356,7 @@ class DroneMission:
             # TODO: use pex03_utils.get_ground_distance to get ground distance
             self.log_info(f"Ground distance: {ground_dist}.")
 
-            new_lat, new_lon = pex03_utils.calc_new_location(lat, lon, heading, ground_dist-5)
+            new_lat, new_lon = pex03_utils.calc_new_location(lat, lon, heading, ground_dist-2)
             # TODO: now, calculate new lat/long within 10 feet of objective
             # Hint: use new_lat, new_lon = pex03_utils.calc_new_location function to get it...
             #       Don't forget that you want to deliver within ten fee of the person (not much closer),
@@ -371,7 +371,7 @@ class DroneMission:
                 cv2.putText(frame_write, "Delivering...", (10, 400), IMG_FONT, 1, (255, 0, 0), 2, cv2.LINE_AA)
                 pex03_utils.write_frame(self.refresh_counter, frame_write, self.log_path)
 
-            if not self.virtual_mode:
+            if self.virtual_mode:
                 # if just testing in sim, just land.
                 self.log_info("Time to land...")
                 self.mission_mode = MISSION_MODE_RTL
@@ -381,7 +381,7 @@ class DroneMission:
             else:
                 # TODO: ***** Finally, lower the package to the ground *****
 
-                alt_thresh = 10  # TODO: YOU set here... when above a certain alt, what rate do you want to descend?
+                alt_thresh = 5  # TODO: YOU set here... when above a certain alt, what rate do you want to descend?
                 # TODO: figure out your speeds here
                 self.log_info("Lowering package....")
                 while self.drone.location.global_relative_frame.alt > alt_thresh:
@@ -397,7 +397,7 @@ class DroneMission:
                     # TODO: remove "pass" when you've completed this condition.
 
                 # TODO: after reach an alt below your threshold, how quickly should you continue to lower the package?
-                while self.drone.location.global_relative_frame.alt > 4:
+                while self.drone.location.global_relative_frame.alt > 2:
                     if self.drone.mode == "RTL" \
                             or self.drone.mode == "LAND" \
                             or self.mission_mode == MISSION_MODE_RTL:
@@ -421,6 +421,7 @@ class DroneMission:
         # Finally, return home.
         drone_lib.log_activity("Time to return home.")
         self.mission_mode = MISSION_MODE_RTL
+        drone_lib.change_device_mode(drone, "RTL", log=log)
 
         # TODO: return the drone home, your job is done...
         cv2.putText(frame_write, "Returning home...", (10, 500), IMG_FONT, 1, (255, 0, 0), 2, cv2.LINE_AA)
